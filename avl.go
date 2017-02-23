@@ -45,6 +45,18 @@ func insert (root *AvlNode, value int) {
   }
 }
 
+//This function just returns difference of heights between left and right
+func balanceFactor (root *AvlNode) int {
+  var rootRightHeight, rootLeftHeight int
+  if root.right != nil {
+    rootRightHeight = root.right.height
+  }
+  if root.left != nil {
+    rootLeftHeight = root.left.height
+  }
+  return rootLeftHeight-rootRightHeight
+}
+
 func populateTree (node *AvlNode) {
   primes := [6]int{2, 3, 5, 7, 11, 13}
   for _, prime := range primes {
