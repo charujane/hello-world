@@ -7,5 +7,14 @@ We are new to GO lang, so let's make some assumptions for simplicity that will h
 
 So first step our node structure.
 
+Assumptions:
+Nodes are int-valued
+We will NOT allow duplicates in our tree. Node equality is based on node values.  
+
+AVL trees are height-balanced binary search trees. We need to calculate balance factor for each node. 
+BalanceFactor(Node) = Height(Left Node) - Height(Right Node)
+For balanced AVL tree (and hence a O(logn) access time), the balance factor for each node is either -1, or 0, or 1.
+
+Let's write a recursive function to find heights. Where do we store calculated heights? Inside the node structure?
 
 
