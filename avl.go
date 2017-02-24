@@ -16,36 +16,95 @@ func max (a, b int) int {
   return b
 }
 
-func calculateHeight (node *AvlNode) int{
+/*func calculateHeight (node *AvlNode) int {
   if node == nil {
     return 0
   }
   node.height = max (calculateHeight(node.left), calculateHeight(node.right)) + 1
   return node.height
+}*/
+
+func height (node *AvlNode) int {
+  if node==nil {
+    return 0
+  }
+  return node.height
+}
+
+func rightRotate (root *AvlNode) *AvlNode {
+  if root == nil || root.left == nil {
+    return root //We cannot do right rotation
+  }
+  
+  node := root.left
+  root.left = node.right
+  node.right = root
+
+  root.height--
+  node.height++
+
+  return node
+}
+
+func leftRotate (root *AvlNode) *AvlNode {
+  if root == nil || root.right == nil {
+    return root //We cannot do any left rotation
+  }
+ 
+  node := root.right
+  root.left = node.right
+  node.left = root
+
+  root.height--
+  node.height++
+  
+  return node
+}
+
+func leftRightRotate (root *AvlNode) *AvlNode {
+  root.left = leftRotate (root.left)
+  root = rightRotate(root)
+  return root
+}
+
+func rightLeftRotate (root *AvlNode) *AvlNode {
+  root.right = rightRotate(root.right)
+  root = leftRotate(root)
+  return root
 }
 
 //Insert "value" in the tree rooted at "root".
-func insert (root *AvlNode, value int) {
-  if root == nil || value == root.value {
-    return //Node identity is based on its value. This node already exists in the tree or root is nil.
-  }
+func insert (root *AvlNode, value int) *AvlNode{
 
-  if value>root.value { //traverse to right
-    if root.right==nil { //We found an empty spot
-      root.right = &AvlNode {nil, nil, value, 0}
-      return
+  if root == nil {
+    root = &AvlNode {nil, nil, value, 0}
+
+  } else if value > root.value { 
+    root.right = insert (root.right, value)
+    if balanceFactor(root) == -2 {
+      if balanceFactor(root.right) == -1 {
+        root = leftRotate(root)
+      } else {
+        root = rightLeftRotate(root)
+      }
     }
-    insert (root.right, value)
-  } else { //Here because value is smaller than root's
-    if root.left==nil {
-      root.left = &AvlNode {nil, nil, value, 0}
-      return
+
+  } else if value < root.value { 
+    root.left = insert (root.left, value)
+    if balanceFactor(root) == 2 {
+      if balanceFactor(root.left) == 1 {
+        root = rightRotate(root)
+      } else {
+        root = leftRightRotate(root)
+      }
     }
-    insert (root.left, value)
   }
+  root.height = max (height(root.right), height(root.left)) + 1
+
+  return root
 }
 
-//This function just returns difference of heights between left and right
+//This function just returns difference of heights between left and right 
 func balanceFactor (root *AvlNode) int {
   var rootRightHeight, rootLeftHeight int
   if root.right != nil {
@@ -61,7 +120,7 @@ func populateTree (node *AvlNode) {
   primes := [6]int{2, 3, 5, 7, 11, 13}
   for _, prime := range primes {
     insert (node, prime)
-  }
+  }  
 }
 
 func printTree (node *AvlNode) {
@@ -83,8 +142,6 @@ func main() {
  var root AvlNode
  root.value = 8
  populateTree(&root)
- fmt.Println(calculateHeight(&root))
  printTree(&root)
 }
 
-                                                                                                                                                                                   1,2           Top
