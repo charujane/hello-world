@@ -40,8 +40,8 @@ func rightRotate (root *AvlNode) *AvlNode {
   root.left = node.right
   node.right = root
 
-  root.height--
-  node.height++
+  root.height = max (height(root.right), height(root.left)) + 1
+  node.height = max (height(node.right), height(node.left)) + 1
 
   return node
 }
@@ -52,11 +52,11 @@ func leftRotate (root *AvlNode) *AvlNode {
   }
  
   node := root.right
-  root.left = node.right
+  root.right = node.left
   node.left = root
 
-  root.height--
-  node.height++
+  root.height = max (height(root.right), height(root.left)) + 1
+  node.height = max (height(node.right), height(node.left)) + 1
   
   return node
 }
@@ -84,7 +84,7 @@ func insert (root *AvlNode, value int) *AvlNode{
     if balanceFactor(root) == -2 {
       if balanceFactor(root.right) == -1 {
         root = leftRotate(root)
-      } else {
+      } else if balanceFactor(root.right) == 1{
         root = rightLeftRotate(root)
       }
     }
@@ -94,7 +94,7 @@ func insert (root *AvlNode, value int) *AvlNode{
     if balanceFactor(root) == 2 {
       if balanceFactor(root.left) == 1 {
         root = rightRotate(root)
-      } else {
+      } else if balanceFactor(root.left) == -1 {
         root = leftRightRotate(root)
       }
     }
@@ -116,11 +116,14 @@ func balanceFactor (root *AvlNode) int {
   return rootLeftHeight-rootRightHeight
 }
 
-func populateTree (node *AvlNode) {
+func populateTree (node *AvlNode) *AvlNode{
   primes := [6]int{2, 3, 5, 7, 11, 13}
+  //primes := [2]int{2, 3}
   for _, prime := range primes {
-    insert (node, prime)
+    node = insert (node, prime)
   }  
+
+  return node
 }
 
 func printTree (node *AvlNode) {
@@ -141,7 +144,6 @@ func printTree (node *AvlNode) {
 func main() {
  var root AvlNode
  root.value = 8
- populateTree(&root)
- printTree(&root)
+ printTree(populateTree(&root))
 }
 
