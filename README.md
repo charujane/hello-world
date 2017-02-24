@@ -23,3 +23,5 @@ So, tree rotations are....interesting. This helped.
 chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/http://eniac.cs.qc.cuny.edu/andrew/csci700-11/lecture7.pdf
 
 Tree structure is wrong, jumps into a never ending loop while printing, so need to get rotations right. Also height is no more correct (Used to be before rotations).
+
+Works now, atleast for my testcase. Need more testing and need to write a delete function.
