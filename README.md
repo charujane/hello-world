@@ -25,3 +25,6 @@ chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/http://eniac.cs.qc.cuny.edu/
 Tree structure is wrong, jumps into a never ending loop while printing, so need to get rotations right. Also height is no more correct (Used to be before rotations).
 
 Works now, atleast for my testcase. Need more testing and need to write a delete function.
+
+For implementing delete, we need to lookup the node to be deleted, remove it from the tree, find a node to replace it, and rebalance the tree. 
+The lookup function needs to return the parent of the lookedup node because the tree rooted at the parent will need to be rebalanced once our node is gone. So we need to track the parent. 
