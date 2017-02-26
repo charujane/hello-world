@@ -73,6 +73,23 @@ func rightLeftRotate (root *AvlNode) *AvlNode {
   return root
 }
 
+func restoreBalance (root *AvlNode) *AvlNode {
+  if balanceFactor(root) == -2 {
+    if balanceFactor(root.right) == -1 {
+      root = leftRotate(root)
+    } else if balanceFactor(root.right) == 1{
+      root = rightLeftRotate(root)
+    }
+  } else if balanceFactor(root) == 2 {
+    if balanceFactor(root.left) == 1 {
+      root = rightRotate(root)
+    } else if balanceFactor(root.left) == -1 {
+      root = leftRightRotate(root)
+    }
+  }
+  return root
+}
+
 //Insert "value" in the tree rooted at "root".
 func insert (root *AvlNode, value int) *AvlNode{
 
@@ -81,26 +98,51 @@ func insert (root *AvlNode, value int) *AvlNode{
 
   } else if value > root.value { 
     root.right = insert (root.right, value)
-    if balanceFactor(root) == -2 {
-      if balanceFactor(root.right) == -1 {
-        root = leftRotate(root)
-      } else if balanceFactor(root.right) == 1{
-        root = rightLeftRotate(root)
-      }
-    }
+    root = restoreBalance (root)
 
   } else if value < root.value { 
     root.left = insert (root.left, value)
-    if balanceFactor(root) == 2 {
-      if balanceFactor(root.left) == 1 {
-        root = rightRotate(root)
-      } else if balanceFactor(root.left) == -1 {
-        root = leftRightRotate(root)
-      }
-    }
+    root = restoreBalance (root)
   }
   root.height = max (height(root.right), height(root.left)) + 1
 
+  return root
+}
+
+//Returns the following combinations:
+//non-nil node, false --> value was found and node is the parent of found node.
+//non-nil node, true --> value was found but there is no parent because value was at root.
+//nil, false --> value was not found in the tree.
+func lookupParentOf (root *AvlNode, value int) (*AvlNode, bool) {
+  if root == nil {
+    return root, false
+  }
+
+  var found bool
+  var node *AvlNode
+
+  if value > root.value {
+    node, found = lookupParentOf(root.right, value)
+  } else if value < root.value {
+    node, found = lookupParentOf(root.left, value)
+  } else {
+    return root, true
+  }
+  
+  if node != nil {
+    if found { 
+      return root, false
+    } 
+  }
+
+  return node, false
+}
+
+//Lookup "value" in tree rooted at "root", delete it, 
+//restore balance, and return new root.
+func delete (root *AvlNode, value int) *AvlNode{
+  //Lookup value
+  
   return root
 }
 
@@ -144,6 +186,14 @@ func printTree (node *AvlNode) {
 func main() {
  var root AvlNode
  root.value = 8
- printTree(populateTree(&root))
+ node := populateTree(&root)
+ printTree(node)
+ fmt.Println(lookupParentOf(node, 11))
+ fmt.Println(lookupParentOf(node, 13))
+ fmt.Println(lookupParentOf(node, 7))
+ fmt.Println(lookupParentOf(node, 2))
+ fmt.Println(lookupParentOf(node, 3))
+ fmt.Println(lookupParentOf(node, 20))
+ fmt.Println(lookupParentOf(node, 0))  
 }
 
