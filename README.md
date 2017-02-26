@@ -8,7 +8,7 @@ We are new to GO lang, so let's make some assumptions for simplicity that will h
 So first step our node structure.
 
 Assumptions:
-Nodes are int-valuedn
+Nodes are int-valued
 We will NOT allow duplicates in our tree. Node equality is based on node values.  
 
 AVL trees are height-balanced binary search trees. We need to calculate balance factor for each node. 
@@ -28,3 +28,16 @@ Works now, atleast for my testcase. Need more testing and need to write a delete
 
 For implementing delete, we need to lookup the node to be deleted, remove it from the tree, find a node to replace it, and rebalance the tree. 
 The lookup function needs to return the parent of the lookedup node because the tree rooted at the parent will need to be rebalanced once our node is gone. So we need to track the parent. 
+
+Deletion Algorithm:
+1. Lookup node to be deleted. If found then go to step 2. Else go to step 6.
+2. Simplest case: The node does not have any children, go to step 2a
+   2a. Delete the node, If parent exists, go to step 5
+   2b. If no parent, delete node and return nil.
+3. If node has one child. Update its parent to point to the node's child. Go to step 5.
+4. If node has two children. 
+   4a. Find the minimum node on the right. To do that traverse to the left most node in the tree rooted at right.
+   4b. Replace the node to be deleted with the minimum node in the right subtree. Go to step 5.
+5. Update parent. Restore balance at the parent. 
+6. Return root.
+   
