@@ -16,13 +16,13 @@ func max (a, b int) int {
   return b
 }
 
-/*func calculateHeight (node *AvlNode) int {
+func calculateHeight (node *AvlNode) int {
   if node == nil {
     return 0
   }
   node.height = max (calculateHeight(node.left), calculateHeight(node.right)) + 1
   return node.height
-}*/
+}
 
 func height (node *AvlNode) int {
   if node==nil {
@@ -73,6 +73,7 @@ func rightLeftRotate (root *AvlNode) *AvlNode {
   return root
 }
 
+//Restores the balance at root and returns the new root 
 func restoreBalance (root *AvlNode) *AvlNode {
   if balanceFactor(root) == -2 {
     if balanceFactor(root.right) == -1 {
@@ -110,39 +111,117 @@ func insert (root *AvlNode, value int) *AvlNode{
 }
 
 //Returns the following combinations:
-//non-nil node, false --> value was found and node is the parent of found node.
-//non-nil node, true --> value was found but there is no parent because value was at root.
-//nil, false --> value was not found in the tree.
-func lookupParentOf (root *AvlNode, value int) (*AvlNode, bool) {
-  if root == nil {
-    return root, false
-  }
-
-  var found bool
+//node, 1 --> value was found and lies on the right of node which is the parent
+//node, -1 --> value was found and lies on the left of node which is the parent
+//node, 0 --> value was found but is the root, node is the value node itself
+//nil, -2 --> value not found.
+func lookupParentOf (root *AvlNode, value int) (*AvlNode, int) {
   var node *AvlNode
+  orientation := -2
 
-  if value > root.value {
-    node, found = lookupParentOf(root.right, value)
-  } else if value < root.value {
-    node, found = lookupParentOf(root.left, value)
-  } else {
-    return root, true
-  }
-  
-  if node != nil {
-    if found { 
-      return root, false
-    } 
+  if (root != nil) {
+    if value > root.value {
+      node, orientation = lookupParentOf(root.right, value)
+      if node != nil {
+        if orientation == 0{ 
+          return root, 1
+        } 
+      }
+    } else if value < root.value {
+      node, orientation = lookupParentOf(root.left, value)
+      if node != nil {
+        if orientation == 0{ 
+          return root, -1
+        } 
+      }
+    } else {
+      return root, 0
+    }
   }
 
-  return node, false
+  return node, orientation
+}
+
+//Returns the minimum value in the tree at root.
+func findMinimum (root *AvlNode) int {
+  //Keep moving to left until you reach the leaf node.
+  if root.left != nil {
+    return findMinimum (root.left)
+  } else { 
+    return root.value
+  }
 }
 
 //Lookup "value" in tree rooted at "root", delete it, 
 //restore balance, and return new root.
 func delete (root *AvlNode, value int) *AvlNode{
-  //Lookup value
+  var nodeToBeDeleted *AvlNode
   
+  parent, orientation := lookupParentOf (root, value) 
+  if parent == nil {
+     //fmt.Printf("The value %d, was not found in the tree rooted at node %s\n", value, root)
+     return root
+  }
+
+  switch orientation {
+  case 1:
+    nodeToBeDeleted = parent.right
+  case 0:
+    nodeToBeDeleted = parent
+  case -1:
+    nodeToBeDeleted = parent.left
+  default :
+    //TODO: Throw assertion error of some kind, figure out exceptions in GO 
+    fmt.Println("Should not get here 1\n")
+  }
+
+  var dNodeOnlyChild *AvlNode
+  dNodeRchild := nodeToBeDeleted.right
+  dNodeLchild := nodeToBeDeleted.left
+  if  dNodeRchild == nil &&  dNodeLchild != nil {
+    dNodeOnlyChild = dNodeLchild 
+  } else if dNodeRchild != nil && dNodeLchild == nil {
+    dNodeOnlyChild = dNodeRchild 
+  } else if dNodeRchild != nil && dNodeLchild != nil {
+    //nodeToBeDeleted has 2 children. Yikes.
+    minVal := findMinimum(dNodeRchild)
+    delete(root, minVal) //Should be simple leaf node deletion
+    nodeToBeDeleted.value = minVal 
+  } 
+
+  //nodeToBeDeleted has only one child or none.
+  if dNodeRchild == nil || dNodeLchild == nil {
+    switch orientation {
+      case 1:
+        parent.right = dNodeOnlyChild
+      case -1:
+        parent.left = dNodeOnlyChild
+      case 0:
+        //nodeToBeDeleted is the root and has only one child
+        root = dNodeOnlyChild
+      default:
+        //TODO: Throw assertion error of some kind, figure out exceptions in GO 
+        fmt.Println("Should not get here 2")
+    }
+  }
+ 
+  if root != nil { 
+    calculateHeight(root)
+    grandParent, parentOrientation := lookupParentOf (root, parent.value)
+    switch parentOrientation {
+    case 1:
+      grandParent.right = restoreBalance(parent) 
+    case -1:
+      grandParent.left = restoreBalance(parent)
+    case 0:
+      //parent was the root
+      root = restoreBalance(root)
+    default: 
+      //TODO: Throw assertion error of some kind, figure out exceptions in GO 
+      fmt.Println("Should not get here 3")
+    }
+  }
+
   return root
 }
 
@@ -159,7 +238,7 @@ func balanceFactor (root *AvlNode) int {
 }
 
 func populateTree (node *AvlNode) *AvlNode{
-  primes := [6]int{2, 3, 5, 7, 11, 13}
+  primes := [5]int{2, 3, 5, 11, 13}
   //primes := [2]int{2, 3}
   for _, prime := range primes {
     node = insert (node, prime)
@@ -168,32 +247,43 @@ func populateTree (node *AvlNode) *AvlNode{
   return node
 }
 
-func printTree (node *AvlNode) {
+func printTree (node *AvlNode, prefix string) {
  if node == nil {
    return
  }
- fmt.Printf ("value %d, height %d\n", node.value, node.height)
+ fmt.Printf ("%svalue %d, height %d\n", prefix, node.value, node.height)
 
- fmt.Printf ("Left for %d: \n", node.value)
- printTree(node.left)
- fmt.Printf ("End of Left for %d\n", node.value)
+ fmt.Printf ("%sLeft for %d: \n", prefix, node.value)
+ printTree(node.left, prefix+"  ")
+ fmt.Printf ("%sEnd of Left for %d\n", prefix, node.value)
 
- fmt.Printf ("Right for %d:\n ", node.value)
- printTree(node.right)
- fmt.Printf ("End of Right for %d\n", node.value)
+ fmt.Printf ("%sRight for %d:\n ", prefix, node.value)
+ printTree(node.right, prefix+"  ")
+ fmt.Printf ("%sEnd of Right for %d\n", prefix, node.value)
 }
 
 func main() {
- var root AvlNode
- root.value = 8
- node := populateTree(&root)
- printTree(node)
- fmt.Println(lookupParentOf(node, 11))
- fmt.Println(lookupParentOf(node, 13))
- fmt.Println(lookupParentOf(node, 7))
- fmt.Println(lookupParentOf(node, 2))
- fmt.Println(lookupParentOf(node, 3))
- fmt.Println(lookupParentOf(node, 20))
- fmt.Println(lookupParentOf(node, 0))  
+ //test
+ node := &AvlNode {nil, nil, 8, 0}
+ node = populateTree(node)
+ printTree(node,"")
+
+ //Vanishing tree. Delete all nodes one by one testing different conditions. 
+ node= delete (node, 11) //Delete node with one child
+ node= delete (node, 13) //Delete leaf on right
+ node= delete (node, 5) //Delete leaf on left
+ printTree(node,"")
+ fmt.Println("---------------------------------------------------------------")
+ node= delete (node, 3) //Delete new root and also node with two children!
+ printTree(node,"")
+ fmt.Println("---------------------------------------------------------------")
+ node= delete (node, 2) //Delete new root
+ node= delete (node, 13) //Delete leaf
+ printTree(node,"")
+ fmt.Println("---------------------------------------------------------------")
+ node= delete (node, 13) //Delete non-existent node
+ node= delete (node, 8) //Delete the last node
+ printTree(node,"")
+ fmt.Println("---------------------------------------------------------------")
 }
 
