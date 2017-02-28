@@ -43,3 +43,6 @@ Deletion Algorithm:
    
 Delete was probably the most complex operation. Not only we need to restore balance at the parent of the deleted node, but also update the grandparent's pointers incase restore balance returned a new root.
 
+Wrote update function and made restoreBalance recursive so that we balance in a recursive fashion (subtrees of node, then node, etc.). Wrote several tests, including corner cases.
+
+
