@@ -41,3 +41,5 @@ Deletion Algorithm:
 5. Update parent. Restore balance at the parent. 
 6. Return root.
    
+Delete was probably the most complex operation. Not only we need to restore balance at the parent of the deleted node, but also update the grandparent's pointers incase restore balance returned a new root.
+
