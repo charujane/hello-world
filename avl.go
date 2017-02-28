@@ -75,17 +75,25 @@ func rightLeftRotate (root *AvlNode) *AvlNode {
 
 //Restores the balance at root and returns the new root 
 func restoreBalance (root *AvlNode) *AvlNode {
-  if balanceFactor(root) == -2 {
-    if balanceFactor(root.right) == -1 {
-      root = leftRotate(root)
-    } else if balanceFactor(root.right) == 1{
-      root = rightLeftRotate(root)
+  if root != nil {
+    if root.height > 2 {
+      root.left = restoreBalance (root.left)
+      root.right = restoreBalance (root.right)
     }
-  } else if balanceFactor(root) == 2 {
-    if balanceFactor(root.left) == 1 {
-      root = rightRotate(root)
-    } else if balanceFactor(root.left) == -1 {
-      root = leftRightRotate(root)
+    if balanceFactor(root) == -2 {
+      if balanceFactor(root.right) == -1 {
+        root = leftRotate(root)
+      } else if balanceFactor(root.right) == 1{
+        root = rightLeftRotate(root)
+      } else {
+        root = leftRotate(root)
+      }
+    } else if balanceFactor(root) == 2 {
+      if balanceFactor(root.left) == 1 {
+        root = rightRotate(root)
+      } else if balanceFactor(root.left) == -1 {
+        root = leftRightRotate(root)
+      }
     }
   }
   return root
@@ -152,6 +160,19 @@ func findMinimum (root *AvlNode) int {
   }
 }
 
+//Lookup value in root. Returns true if found, false otherwise.
+func lookup (root *AvlNode, value int) bool {
+  if root==nil {
+    return false
+  } else if root.value < value {
+    return lookup (root.right, value)
+  } else if root.value > value {
+    return lookup (root.left, value)
+  }
+
+  return true
+}
+
 //Lookup "value" in tree rooted at "root", delete it, 
 //restore balance, and return new root.
 func delete (root *AvlNode, value int) *AvlNode{
@@ -205,26 +226,24 @@ func delete (root *AvlNode, value int) *AvlNode{
     }
   }
  
-  if root != nil { 
-    calculateHeight(root)
-    grandParent, parentOrientation := lookupParentOf (root, parent.value)
-    switch parentOrientation {
-    case 1:
-      grandParent.right = restoreBalance(parent) 
-    case -1:
-      grandParent.left = restoreBalance(parent)
-    case 0:
-      //parent was the root
-      root = restoreBalance(root)
-    default: 
-      //TODO: Throw assertion error of some kind, figure out exceptions in GO 
-      fmt.Println("Should not get here 3")
-    }
-  }
+  calculateHeight(root)
+  root = restoreBalance(root)
 
   return root
 }
 
+//Removes value node and inserts newValue node in root.
+func update (root *AvlNode, value int, newValue int) *AvlNode {
+  if value == newValue {
+    return root //haha
+  }
+  if lookup(root, value) {
+    root = insert(root, newValue)
+    root = delete(root, value)
+  } 
+  return root
+}
+ 
 //This function just returns difference of heights between left and right 
 func balanceFactor (root *AvlNode) int {
   var rootRightHeight, rootLeftHeight int
@@ -237,9 +256,17 @@ func balanceFactor (root *AvlNode) int {
   return rootLeftHeight-rootRightHeight
 }
 
-func populateTree (node *AvlNode) *AvlNode{
+func populateTestTree1 (node *AvlNode) *AvlNode{
   primes := [5]int{2, 3, 5, 11, 13}
-  //primes := [2]int{2, 3}
+  for _, prime := range primes {
+    node = insert (node, prime)
+  }  
+
+  return node
+}
+
+func populateTestTree2 (node *AvlNode) *AvlNode{
+  primes := [6]int{8, 12, 6, 14, 9, 4}
   for _, prime := range primes {
     node = insert (node, prime)
   }  
@@ -265,25 +292,51 @@ func printTree (node *AvlNode, prefix string) {
 func main() {
  //test
  node := &AvlNode {nil, nil, 8, 0}
- node = populateTree(node)
- printTree(node,"")
 
+ fmt.Println("Test tree 1---------------------------------------------------------------")
+ node = populateTestTree1(node)
+ printTree(node,"")
+ fmt.Println("---------------------------------------------------------------")
  //Vanishing tree. Delete all nodes one by one testing different conditions. 
  node= delete (node, 11) //Delete node with one child
  node= delete (node, 13) //Delete leaf on right
  node= delete (node, 5) //Delete leaf on left
  printTree(node,"")
  fmt.Println("---------------------------------------------------------------")
- node= delete (node, 3) //Delete new root and also node with two children!
+ node= delete (node, 3) //Delete new root which is also a node with two children!
  printTree(node,"")
  fmt.Println("---------------------------------------------------------------")
  node= delete (node, 2) //Delete new root
  node= delete (node, 13) //Delete leaf
  printTree(node,"")
  fmt.Println("---------------------------------------------------------------")
- node= delete (node, 13) //Delete non-existent node
- node= delete (node, 8) //Delete the last node
+ node = update(node, 8,10) 
  printTree(node,"")
  fmt.Println("---------------------------------------------------------------")
+
+ fmt.Println("Test tree 2---------------------------------------------------------------")
+ node = populateTestTree2(node)
+ printTree(node,"")
+ node = delete (node, 14) //Hard to balance tree with imbalance at the root
+ fmt.Println("---------------------------------------------------------------")
+ printTree(node,"")
+ node = delete (node, 6) //Hard to balance, will need juggling children of several nodes.
+ node = delete (node, 4)
+ fmt.Println("---------------------------------------------------------------")
+ printTree(node,"")
+
+ //Test corner cases
+ //Null root
+ //Delete non-existent node
+ //Update non-existent node
+ //Delete in null tree
+ //Insert in a null tree
+ node = nil
+ node = delete (node, 12)
+ node = insert (node, 1)
+ node = update (node, 12, 13)
+ node = delete (node, 42) 
+ fmt.Println("Test Tree 3---------------------------------------------------------------")
+ printTree(node,"")
 }
 
