@@ -81,18 +81,16 @@ func restoreBalance (root *AvlNode) *AvlNode {
       root.right = restoreBalance (root.right)
     }
     if balanceFactor(root) == -2 {
-      if balanceFactor(root.right) == -1 {
-        root = leftRotate(root)
-      } else if balanceFactor(root.right) == 1{
+      if balanceFactor(root.right) == 1 {
         root = rightLeftRotate(root)
       } else {
         root = leftRotate(root)
       }
     } else if balanceFactor(root) == 2 {
-      if balanceFactor(root.left) == 1 {
-        root = rightRotate(root)
-      } else if balanceFactor(root.left) == -1 {
+      if balanceFactor(root.left) == -1 {
         root = leftRightRotate(root)
+      } else {
+        root = rightRotate(root)
       }
     }
   }
